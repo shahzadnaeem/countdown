@@ -40,7 +40,7 @@ pub fn valid(op: &Op, a: i32, b: i32) -> bool {
         Op::Add => a <= b,
         Op::Sub => a > b,
         Op::Mul => a != 1 && b != 1 && a <= b,
-        Op::Div => a != 1 && a % b == 0,
+        Op::Div => b != 1 && a % b == 0,
     };
 }
 

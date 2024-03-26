@@ -1,4 +1,4 @@
-use crate::defs::{Expr, Op};
+use crate::defs::{eval, valid, Expr, Op};
 
 pub fn subs<T>(src: &[T]) -> Vec<Vec<T>>
 where
@@ -127,6 +127,9 @@ where
     res
 }
 
+// Simplest solution - brute force search
+// NOTE: Includes optimised validity check
+
 pub fn combine(l: Expr, r: Expr) -> Vec<Expr> {
     let mut res = Vec::<Expr>::new();
 
@@ -159,14 +162,93 @@ pub fn exprs(src: &[i32]) -> Vec<Expr> {
     res
 }
 
+pub fn solutions(input: &[i32], target: i32) -> (Vec<Expr>, usize) {
+    let mut total_checked: usize = 0;
+    let mut res = Vec::<Expr>::new();
+
+    choices(&input).into_iter().for_each(|choice| {
+        let exprs = exprs(&choice);
+
+        exprs.into_iter().for_each(|ex| {
+            total_checked += 1;
+
+            if let Some(val) = eval(&ex) {
+                if val == target {
+                    res.push(ex);
+                }
+            }
+        });
+    });
+
+    (res, total_checked)
+}
+
+// First optimisation
+
+type Result = (Expr, i32);
+
+pub fn combine2(l: Result, r: Result) -> Vec<Result> {
+    let mut res = Vec::<Result>::new();
+
+    [Op::Add, Op::Sub, Op::Mul, Op::Div]
+        .into_iter()
+        .for_each(|op| {
+            // Check if each expression is valid and keep it and its value
+            if valid(&op, l.1, r.1) {
+                let expr = Expr::new_expr(op, l.0.clone(), r.0.clone());
+                let val = eval(&expr).unwrap();
+                res.push((expr, val));
+            }
+        });
+
+    res
+}
+
+pub fn results(src: &[i32]) -> Vec<Result> {
+    let mut res = Vec::<Result>::new();
+
+    if src.len() == 1 {
+        res.push((Expr::new_val(src[0].clone()), src[0]));
+    } else {
+        split(src).into_iter().for_each(|(l, r)| {
+            results(&l).into_iter().for_each(|le| {
+                results(&r).into_iter().for_each(|re| {
+                    combine2(le.clone(), re.clone()).into_iter().for_each(|e| {
+                        res.push(e);
+                    });
+                });
+            });
+        });
+    }
+
+    res
+}
+
+pub fn solutions2(input: &[i32], target: i32) -> (Vec<Expr>, usize) {
+    let mut total_checked: usize = 0;
+    let mut res = Vec::<Expr>::new();
+
+    choices(&input).into_iter().for_each(|choice| {
+        let results = results(&choice);
+
+        results.into_iter().for_each(|result| {
+            total_checked += 1;
+
+            if result.1 == target {
+                res.push(result.0);
+            }
+        });
+    });
+
+    (res, total_checked)
+}
+
 #[cfg(test)]
 mod tests {
 
-    use itertools::Itertools;
-
-    use crate::defs::eval;
-
     use super::*;
+    use crate::defs::eval;
+    use itertools::Itertools;
 
     #[test]
     fn empty() {
@@ -295,20 +377,20 @@ mod tests {
     fn exprs_three_make_6() {
         let input = [1, 2, 3];
 
-        choices(&input).into_iter().for_each(|choice| {
-            let res = exprs(&choice);
+        const TARGET: i32 = 6;
 
-            const WANT: i32 = 6;
+        let solns = solutions(&input, TARGET);
 
-            res.iter().for_each(|ex| {
-                if let Some(res) = eval(&ex) {
-                    if res == WANT {
-                        println!("ex: {ex} = {}", res)
-                    }
-                }
-            });
+        println!(
+            "{} solutions to make {} from {:?} - {} checked",
+            solns.0.len(),
+            TARGET,
+            input,
+            solns.1
+        );
 
-            // println!("{} expressions from {input:?}", res.len());
+        solns.0.iter().for_each(|s| {
+            println!("ex: {} = {TARGET}", s);
         });
     }
 
@@ -316,26 +398,41 @@ mod tests {
     fn want_608() {
         let input = [50, 25, 75, 100, 4, 1];
 
-        let mut tot_results = 0;
-        let mut tot_exprs = 0;
+        let solns = solutions(&input, TARGET);
 
-        choices(&input).into_iter().for_each(|choice| {
-            let res = exprs(&choice);
+        const TARGET: i32 = 608;
 
-            const WANT: i32 = 608;
+        println!(
+            "{} solutions to make {} from {:?} - {} checked",
+            solns.0.len(),
+            TARGET,
+            input,
+            solns.1
+        );
 
-            res.iter().for_each(|ex| {
-                tot_exprs += 1;
-
-                if let Some(res) = eval(&ex) {
-                    if res == WANT {
-                        tot_results += 1;
-                        println!("#{}: {ex} = {}", tot_results, res);
-                    }
-                }
-            });
+        solns.0.iter().for_each(|s| {
+            println!("ex: {} = {TARGET}", s);
         });
+    }
 
-        println!("{}/{} expressions from {input:?}", tot_results, tot_exprs);
+    #[test]
+    fn want_608_v2() {
+        let input = [50, 25, 75, 100, 4, 1];
+
+        let solns = solutions2(&input, TARGET);
+
+        const TARGET: i32 = 608;
+
+        println!(
+            "{} solutions to make {} from {:?} - {} checked",
+            solns.0.len(),
+            TARGET,
+            input,
+            solns.1
+        );
+
+        solns.0.iter().for_each(|s| {
+            println!("ex: {} = {TARGET}", s);
+        });
     }
 }
