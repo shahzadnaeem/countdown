@@ -9,9 +9,9 @@ struct Countdown {
     nums: Vec<i32>,
 }
 
-// Invocation:
+// Invocation: CLAP provides help
 //
-// countdown 608 50 25 75 100 4 1
+// countdown 50 25 75 100 4 1 -t 608
 //
 
 pub fn solve(target: i32, nums: &[i32]) {
