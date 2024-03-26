@@ -185,7 +185,7 @@ pub fn solutions(input: &[i32], target: i32) -> (Vec<Expr>, usize) {
 
 // First optimisation
 
-type Result = (Expr, i32);
+pub type Result = (Expr, i32);
 
 pub fn combine2(l: Result, r: Result) -> Vec<Result> {
     let mut res = Vec::<Result>::new();
@@ -224,9 +224,9 @@ pub fn results(src: &[i32]) -> Vec<Result> {
     res
 }
 
-pub fn solutions2(input: &[i32], target: i32) -> (Vec<Expr>, usize) {
+pub fn solutions2(input: &[i32], target: i32) -> (Vec<Result>, usize) {
     let mut total_checked: usize = 0;
-    let mut res = Vec::<Expr>::new();
+    let mut res = Vec::<Result>::new();
 
     choices(&input).into_iter().for_each(|choice| {
         let results = results(&choice);
@@ -235,7 +235,7 @@ pub fn solutions2(input: &[i32], target: i32) -> (Vec<Expr>, usize) {
             total_checked += 1;
 
             if result.1 == target {
-                res.push(result.0);
+                res.push(result);
             }
         });
     });
@@ -432,7 +432,7 @@ mod tests {
         );
 
         solns.0.iter().for_each(|s| {
-            println!("ex: {} = {TARGET}", s);
+            println!("ex: {} = {}", s.0, s.1);
         });
     }
 }

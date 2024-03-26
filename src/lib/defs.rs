@@ -19,7 +19,7 @@ impl Display for Op {
     }
 }
 
-#[derive(Clone, PartialEq, Debug)]
+#[derive(Clone, Debug)]
 pub enum Expr {
     Val(i32),
     Expr(Op, Box<Expr>, Box<Expr>),
@@ -30,6 +30,22 @@ impl Display for Expr {
         match self {
             Expr::Val(v) => write!(f, "{}", v),
             Expr::Expr(op, a, b) => write!(f, "({} {} {})", a, op, b),
+        }
+    }
+}
+
+impl PartialEq for Expr {
+    fn eq(&self, other: &Self) -> bool {
+        match (self, other) {
+            (Self::Val(l0), Self::Val(r0)) => l0 == r0,
+            (Self::Expr(l0, l1, l2), Self::Expr(r0, r1, r2)) => {
+                if l0 == &Op::Add || l0 == &Op::Mul {
+                    l0 == r0 && ((l1 == r1 && l2 == r2) || (l1 == r2 && l2 == r1))
+                } else {
+                    l0 == r0 && l1 == r1 && l2 == r2
+                }
+            }
+            _ => false,
         }
     }
 }
@@ -118,5 +134,65 @@ mod tests {
         println!("expr: {} = {:?}", expr, result);
 
         assert_eq!(result, Some(13));
+    }
+
+    #[test]
+    fn expr_eq_add_vals() {
+        let e1 = Expr::new_expr(Op::Add, Expr::new_val(10), Expr::Val(100));
+        let e2 = Expr::new_expr(Op::Add, Expr::new_val(100), Expr::Val(10));
+
+        assert_eq!(e1, e2);
+    }
+
+    #[test]
+    fn expr_eq_mul_vals() {
+        let e1 = Expr::new_expr(Op::Mul, Expr::new_val(10), Expr::Val(100));
+        let e2 = Expr::new_expr(Op::Mul, Expr::new_val(100), Expr::Val(10));
+
+        assert_eq!(e1, e2);
+    }
+
+    #[test]
+    fn expr_ne_sub_vals() {
+        let e1 = Expr::new_expr(Op::Sub, Expr::new_val(10), Expr::Val(100));
+        let e2 = Expr::new_expr(Op::Sub, Expr::new_val(100), Expr::Val(10));
+
+        assert_ne!(e1, e2);
+    }
+
+    #[test]
+    fn expr_ne_div_vals() {
+        let e1 = Expr::new_expr(Op::Div, Expr::new_val(10), Expr::Val(100));
+        let e2 = Expr::new_expr(Op::Div, Expr::new_val(100), Expr::Val(10));
+
+        assert_ne!(e1, e2);
+    }
+
+    #[test]
+    fn expr_eq_add_expr() {
+        let e1 = Expr::new_expr(
+            Op::Add,
+            Expr::new_val(10),
+            Expr::new_expr(
+                Op::Mul,
+                Expr::new_val(10),
+                Expr::new_expr(Op::Mul, Expr::new_val(10), Expr::new_val(3)),
+            ),
+        );
+        let e2 = Expr::new_expr(
+            Op::Add,
+            Expr::new_expr(
+                Op::Mul,
+                Expr::new_expr(Op::Mul, Expr::new_val(10), Expr::new_val(3)),
+                Expr::new_val(10),
+            ),
+            Expr::new_val(10),
+        );
+
+        assert_eq!(e1, e2);
+
+        println!("{} == {} ?", e1, e2);
+
+        assert!(!std::ptr::eq(&e1, &e2));
     }
 }
