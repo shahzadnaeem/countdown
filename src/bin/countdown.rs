@@ -1,5 +1,5 @@
 use clap::Parser;
-use expr::combs::{solutions2, Result};
+use countdown::combs::{solutions2, Result};
 
 #[derive(Parser)]
 #[command(version, about)]

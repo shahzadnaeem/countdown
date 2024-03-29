@@ -25,11 +25,24 @@ pub enum Expr {
     Expr(Op, Box<Expr>, Box<Expr>),
 }
 
+impl Expr {
+    pub fn brak_fmt(e: &Self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match e {
+            Expr::Val(v) => write!(f, "{}", v),
+            Expr::Expr(op, a, b) => write!(f, "({} {} {})", a, op, b),
+        }
+    }
+}
+
 impl Display for Expr {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
             Expr::Val(v) => write!(f, "{}", v),
-            Expr::Expr(op, a, b) => write!(f, "({} {} {})", a, op, b),
+            Expr::Expr(op, a, b) => {
+                Expr::brak_fmt(&*a, f)?;
+                write!(f, " {} ", op)?;
+                Expr::brak_fmt(&*b, f)
+            }
         }
     }
 }
@@ -56,7 +69,7 @@ pub fn valid(op: &Op, a: i32, b: i32) -> bool {
         Op::Add => a <= b,
         Op::Sub => a > b,
         Op::Mul => a != 1 && b != 1 && a <= b,
-        Op::Div => b != 1 && a % b == 0,
+        Op::Div => b > 1 && a % b == 0,
     };
 }
 
