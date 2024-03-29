@@ -6,6 +6,7 @@ pub enum Op {
     Sub,
     Mul,
     Div,
+    Exp,
 }
 
 impl Display for Op {
@@ -15,6 +16,7 @@ impl Display for Op {
             Op::Sub => write!(f, "-"),
             Op::Mul => write!(f, "*"),
             Op::Div => write!(f, "/"),
+            Op::Exp => write!(f, "^"),
         }
     }
 }
@@ -68,8 +70,9 @@ pub fn valid(op: &Op, a: i32, b: i32) -> bool {
     return match op {
         Op::Add => a <= b,
         Op::Sub => a > b,
-        Op::Mul => a != 1 && b != 1 && a <= b,
+        Op::Mul => a != 1 && b != 1 && a <= b && a.checked_mul(b).is_some(),
         Op::Div => b > 1 && a % b == 0,
+        Op::Exp => a > 1 && b > 1 && a.checked_pow(b as u32).is_some(),
     };
 }
 
@@ -82,6 +85,7 @@ pub fn apply(op: &Op, a: &Expr, b: &Expr) -> Option<i32> {
                     Op::Sub => Some(a - b),
                     Op::Mul => Some(a * b),
                     Op::Div => Some(a / b),
+                    Op::Exp => Some(a.pow(b as u32)),
                 };
             }
         }
@@ -123,30 +127,32 @@ mod tests {
 
     #[test]
     fn simple_add() {
-        let expr = Expr::new_expr(Op::Add, Expr::new_val(10), Expr::new_val(0));
+        // NOTE: Must be a 'valid' expression (optimisation)
+        let expr = Expr::new_expr(Op::Add, Expr::new_val(10), Expr::new_val(15));
 
         let result = eval(&expr);
         println!("expr: {} = {:?}", expr, result);
 
-        assert_eq!(result, Some(10));
+        assert_eq!(result, Some(25));
     }
 
     #[test]
     fn nested_expr() {
+        // NOTE: Must be a 'valid' expression (optimisation)
         let expr = Expr::new_expr(
             Op::Mul,
             Expr::new_expr(
                 Op::Sub,
-                Expr::new_expr(Op::Add, Expr::new_val(3), Expr::new_val(4)),
+                Expr::new_expr(Op::Add, Expr::new_val(4), Expr::new_val(29)),
                 Expr::new_expr(Op::Div, Expr::new_val(100), Expr::new_val(5)),
             ),
-            Expr::new_val(-1),
+            Expr::new_val(30),
         );
 
         let result = eval(&expr);
         println!("expr: {} = {:?}", expr, result);
 
-        assert_eq!(result, Some(13));
+        assert_eq!(result, Some(390));
     }
 
     #[test]
@@ -207,5 +213,14 @@ mod tests {
         println!("{} == {} ?", e1, e2);
 
         assert!(!std::ptr::eq(&e1, &e2));
+    }
+
+    #[test]
+    fn eval_exp() {
+        let expr = Expr::new_expr(Op::Exp, Expr::new_val(4), Expr::new_val(5));
+
+        let res = eval(&expr);
+
+        assert_eq!(Some(1024), res);
     }
 }
