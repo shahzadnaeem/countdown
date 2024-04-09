@@ -7,6 +7,8 @@ struct Countdown {
     #[arg(short = 't')]
     target: i32,
     nums: Vec<i32>,
+    #[arg(long, default_value_t = false, help = "Allow exponent operator")]
+    allow_exp: bool,
 }
 
 // Invocation: CLAP provides help
@@ -14,8 +16,8 @@ struct Countdown {
 // countdown 50 25 75 100 4 1 -t 608
 //
 
-pub fn solve(target: i32, nums: &[i32]) {
-    let solns = solutions2(&nums, target);
+pub fn solve(target: i32, nums: &[i32], allow_exp: bool) {
+    let solns = solutions2(&nums, target, allow_exp);
 
     solns.0.iter().for_each(|s| {
         println!("{} = {}", s.0, s.1);
@@ -56,5 +58,5 @@ pub fn solve(target: i32, nums: &[i32]) {
 pub fn main() {
     let countdown = Countdown::parse();
 
-    solve(countdown.target, &countdown.nums);
+    solve(countdown.target, &countdown.nums, countdown.allow_exp);
 }
