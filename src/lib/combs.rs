@@ -1,4 +1,4 @@
-use crate::defs::{eval, valid, Expr, Op};
+use crate::defs::{eval, valid, Expr, Op, OpsType};
 
 pub fn subs<T>(src: &[T]) -> Vec<Vec<T>>
 where
@@ -187,19 +187,13 @@ pub fn solutions(input: &[i32], target: i32) -> (Vec<Expr>, usize) {
 
 pub type Result = (Expr, i32);
 
-pub fn combine2(l: Result, r: Result, allow_exp: bool) -> Vec<Result> {
+pub fn combine2(l: Result, r: Result, ops: &OpsType) -> Vec<Result> {
     let mut res = Vec::<Result>::new();
 
-    let mut ops = vec![Op::Add, Op::Sub, Op::Mul, Op::Div];
-
-    if allow_exp {
-        ops.push(Op::Exp);
-    }
-
-    ops.into_iter().for_each(|op| {
+    ops.iter().for_each(|op| {
         // Check if each expression is valid and keep it and its value
         if valid(&op, l.1, r.1) {
-            let expr = Expr::new_expr(op, l.0.clone(), r.0.clone());
+            let expr = Expr::new_expr(op.clone(), l.0.clone(), r.0.clone());
             let val = eval(&expr).unwrap();
             res.push((expr, val));
         }
@@ -208,16 +202,16 @@ pub fn combine2(l: Result, r: Result, allow_exp: bool) -> Vec<Result> {
     res
 }
 
-pub fn results(src: &[i32], allow_exp: bool) -> Vec<Result> {
+pub fn results(src: &[i32], ops: &OpsType) -> Vec<Result> {
     let mut res = Vec::<Result>::new();
 
     if src.len() == 1 {
         res.push((Expr::new_val(src[0].clone()), src[0]));
     } else {
         split(src).into_iter().for_each(|(l, r)| {
-            results(&l, allow_exp).into_iter().for_each(|le| {
-                results(&r, allow_exp).into_iter().for_each(|re| {
-                    combine2(le.clone(), re.clone(), allow_exp)
+            results(&l, ops).into_iter().for_each(|le| {
+                results(&r, ops).into_iter().for_each(|re| {
+                    combine2(le.clone(), re.clone(), ops)
                         .into_iter()
                         .for_each(|e| {
                             res.push(e);
@@ -230,12 +224,12 @@ pub fn results(src: &[i32], allow_exp: bool) -> Vec<Result> {
     res
 }
 
-pub fn solutions2(input: &[i32], target: i32, allow_exp: bool) -> (Vec<Result>, usize) {
+pub fn solutions2(input: &[i32], target: i32, ops: &OpsType) -> (Vec<Result>, usize) {
     let mut total_checked: usize = 0;
     let mut res = Vec::<Result>::new();
 
     choices(&input).into_iter().for_each(|choice| {
-        let results = results(&choice, allow_exp);
+        let results = results(&choice, ops);
 
         results.into_iter().for_each(|result| {
             total_checked += 1;
@@ -253,7 +247,7 @@ pub fn solutions2(input: &[i32], target: i32, allow_exp: bool) -> (Vec<Result>, 
 mod tests {
 
     use super::*;
-    use crate::defs::eval;
+    use crate::defs::{eval, std_ops};
     use itertools::Itertools;
 
     #[test]
@@ -429,7 +423,7 @@ mod tests {
     fn want_608_v2() {
         let input = [50, 25, 75, 100, 4, 1];
 
-        let solns = solutions2(&input, TARGET, false);
+        let solns = solutions2(&input, TARGET, &std_ops());
 
         const TARGET: i32 = 608;
 

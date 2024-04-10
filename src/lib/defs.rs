@@ -1,12 +1,28 @@
+use clap::ValueEnum;
 use std::fmt::Display;
 
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Debug, Clone, PartialEq, ValueEnum)]
 pub enum Op {
     Add,
     Sub,
     Mul,
     Div,
     Exp,
+}
+
+impl TryFrom<char> for Op {
+    type Error = &'static str;
+
+    fn try_from(value: char) -> Result<Self, Self::Error> {
+        match value {
+            '+' => Ok(Op::Add),
+            '-' => Ok(Op::Sub),
+            '*' => Ok(Op::Mul),
+            '/' => Ok(Op::Div),
+            '^' => Ok(Op::Exp),
+            _ => Err("Invalid op - only + - * / ^ are allowed"),
+        }
+    }
 }
 
 impl Display for Op {
@@ -19,6 +35,16 @@ impl Display for Op {
             Op::Exp => write!(f, "^"),
         }
     }
+}
+
+pub type OpsType = Vec<Op>;
+
+pub fn all_ops() -> Vec<Op> {
+    [Op::Add, Op::Sub, Op::Mul, Op::Div, Op::Exp].to_vec()
+}
+
+pub fn std_ops() -> Vec<Op> {
+    [Op::Add, Op::Sub, Op::Mul, Op::Div].to_vec()
 }
 
 #[derive(Clone, Debug)]
@@ -114,6 +140,20 @@ impl Expr {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn read_good_op() {
+        let res = Op::try_from('+');
+
+        assert_eq!(res, Ok(Op::Add));
+    }
+
+    #[test]
+    fn read_bad_op() {
+        let res = Op::try_from('~');
+
+        assert!(res.is_err());
+    }
 
     #[test]
     fn simple_val() {
