@@ -11,6 +11,7 @@ pub enum Op {
     Mod,
 }
 
+// NOTE: Not using this currently - lowercase Op values used via clap
 impl TryFrom<char> for Op {
     type Error = &'static str;
 
@@ -70,17 +71,19 @@ impl Expr {
         }
     }
 
-    fn get_vals(e: &Expr) -> Vec<i32> {
+    fn get_vals(e: &Expr, op: &Op) -> Vec<i32> {
         let mut vals = Vec::<i32>::new();
 
         match e {
             Expr::Val(n) => vals.push(*n),
-            Expr::Expr(_, a, b) => {
-                if let Expr::Val(n) = **a {
-                    vals.push(n)
-                }
-                if let Expr::Val(n) = **b {
-                    vals.push(n)
+            Expr::Expr(o, a, b) => {
+                if o == op {
+                    if let Expr::Val(n) = **a {
+                        vals.push(n)
+                    }
+                    if let Expr::Val(n) = **b {
+                        vals.push(n)
+                    }
                 }
             }
         }
@@ -88,19 +91,19 @@ impl Expr {
         vals
     }
 
-    fn get_all_vals(e1: &Expr, e2: &Expr) -> Vec<i32> {
+    fn get_all_vals(e1: &Expr, e2: &Expr, op: &Op) -> Vec<i32> {
         let mut vals = Vec::<i32>::new();
 
-        vals.append(&mut Self::get_vals(e1));
-        vals.append(&mut Self::get_vals(e2));
+        vals.append(&mut Self::get_vals(e1, op));
+        vals.append(&mut Self::get_vals(e2, op));
         vals.sort();
 
         vals
     }
 
-    fn eq_vals(l1: &Expr, l2: &Expr, r1: &Expr, r2: &Expr) -> bool {
-        let lvals = Self::get_all_vals(l1, l2);
-        let rvals = Self::get_all_vals(r1, r2);
+    fn eq_vals(l1: &Expr, l2: &Expr, r1: &Expr, r2: &Expr, op: &Op) -> bool {
+        let lvals = Self::get_all_vals(l1, l2, op);
+        let rvals = Self::get_all_vals(r1, r2, op);
 
         lvals.len() >= 3 && lvals == rvals
     }
@@ -130,7 +133,7 @@ impl PartialEq for Expr {
                         true
                     } else {
                         if lo == ro {
-                            if Expr::eq_vals(l1, l2, r1, r2) {
+                            if Expr::eq_vals(l1, l2, r1, r2, lo) {
                                 return true;
                             }
                         }
