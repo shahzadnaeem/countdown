@@ -1,13 +1,14 @@
 use clap::ValueEnum;
 use std::fmt::Display;
 
-#[derive(Debug, Clone, PartialEq, ValueEnum)]
+#[derive(Debug, Clone, PartialEq, Eq, ValueEnum)]
 pub enum Op {
     Add,
     Sub,
     Mul,
     Div,
     Exp,
+    Mod,
 }
 
 impl TryFrom<char> for Op {
@@ -20,6 +21,7 @@ impl TryFrom<char> for Op {
             '*' => Ok(Op::Mul),
             '/' => Ok(Op::Div),
             '^' => Ok(Op::Exp),
+            '%' => Ok(Op::Mod),
             _ => Err("Invalid op - only + - * / ^ are allowed"),
         }
     }
@@ -33,6 +35,7 @@ impl Display for Op {
             Op::Mul => write!(f, "*"),
             Op::Div => write!(f, "/"),
             Op::Exp => write!(f, "^"),
+            Op::Mod => write!(f, "%"),
         }
     }
 }
@@ -40,7 +43,7 @@ impl Display for Op {
 pub type OpsType = Vec<Op>;
 
 pub fn all_ops() -> Vec<Op> {
-    [Op::Add, Op::Sub, Op::Mul, Op::Div, Op::Exp].to_vec()
+    [Op::Add, Op::Sub, Op::Mul, Op::Div, Op::Exp, Op::Mod].to_vec()
 }
 
 pub fn std_ops() -> Vec<Op> {
@@ -57,7 +60,13 @@ impl Expr {
     pub fn brak_fmt(e: &Self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match e {
             Expr::Val(v) => write!(f, "{}", v),
-            Expr::Expr(op, a, b) => write!(f, "({} {} {})", a, op, b),
+            Expr::Expr(op, a, b) => {
+                write!(f, "(")?;
+                Expr::brak_fmt(a, f)?;
+                write!(f, " {} ", op)?;
+                Expr::brak_fmt(b, f)?;
+                write!(f, ")")
+            }
         }
     }
 }
@@ -99,6 +108,7 @@ pub fn valid(op: &Op, a: i32, b: i32) -> bool {
         Op::Mul => a != 1 && b != 1 && a <= b && a.checked_mul(b).is_some(),
         Op::Div => b > 1 && a % b == 0,
         Op::Exp => a > 1 && b > 1 && a.checked_pow(b as u32).is_some(),
+        Op::Mod => a > 0 && b != 0,
     };
 }
 
@@ -112,6 +122,7 @@ pub fn apply(op: &Op, a: &Expr, b: &Expr) -> Option<i32> {
                     Op::Mul => Some(a * b),
                     Op::Div => Some(a / b),
                     Op::Exp => Some(a.pow(b as u32)),
+                    Op::Mod => Some(a % b),
                 };
             }
         }

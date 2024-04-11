@@ -4,16 +4,18 @@ use countdown::combs::{solutions2, Result as SolutionResult};
 use countdown::defs::{all_ops, std_ops, Op, OpsType};
 
 #[derive(Parser)]
-#[command(version, about)]
+#[command(version = "1.0", about = "Countdown numbers solver")]
 struct Countdown {
-    #[arg(short = 't')]
+    #[arg(short = 't', long = "target", help = "Target value")]
     target: i32,
+    #[arg(help = "Allowed numbers, used once, can include duplicates")]
     nums: Vec<i32>,
-    #[arg(long = "op", action = clap::ArgAction::Append)]
+
+    #[arg(long = "op", name = "OP", action = clap::ArgAction::Append)]
     ops: Vec<Op>,
-    #[arg(long, default_value_t = true)]
+    #[arg(long, default_value_t = true, help = "[add, mul, sub, div] -- default")]
     std_ops: bool,
-    #[arg(long, default_value_t = false)]
+    #[arg(long, default_value_t = false, help = "[add, mul, sub, div, exp]")]
     all_ops: bool,
 }
 
@@ -38,9 +40,14 @@ pub fn solve(target: i32, nums: &[i32], ops: &OpsType) {
     );
 
     let mut deduped = Vec::<SolutionResult>::new();
+    let mut first_dup = true;
 
     solns.0.clone().into_iter().for_each(|s| {
         if let Some(dup) = deduped.iter().find(|&dr| dr == &s) {
+            if first_dup {
+                println!();
+                first_dup = false;
+            }
             println!("Duplicate: {} of {}", s.0, dup.0);
         } else {
             deduped.push(s);
@@ -55,10 +62,11 @@ pub fn solve(target: i32, nums: &[i32], ops: &OpsType) {
         });
 
         println!(
-            "{} unique solutions to make {} from {:?}",
+            "{} unique solutions to make {} from {:?} - {} checked",
             deduped.len(),
             target,
-            nums
+            nums,
+            solns.1
         );
     }
 }
