@@ -57,17 +57,52 @@ pub enum Expr {
 }
 
 impl Expr {
-    pub fn brak_fmt(e: &Self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+    fn brak_fmt(e: &Self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match e {
             Expr::Val(v) => write!(f, "{}", v),
             Expr::Expr(op, a, b) => {
                 write!(f, "(")?;
-                Expr::brak_fmt(a, f)?;
+                Self::brak_fmt(a, f)?;
                 write!(f, " {} ", op)?;
-                Expr::brak_fmt(b, f)?;
+                Self::brak_fmt(b, f)?;
                 write!(f, ")")
             }
         }
+    }
+
+    fn get_vals(e: &Expr) -> Vec<i32> {
+        let mut vals = Vec::<i32>::new();
+
+        match e {
+            Expr::Val(n) => vals.push(*n),
+            Expr::Expr(_, a, b) => {
+                if let Expr::Val(n) = **a {
+                    vals.push(n)
+                }
+                if let Expr::Val(n) = **b {
+                    vals.push(n)
+                }
+            }
+        }
+
+        vals
+    }
+
+    fn get_all_vals(e1: &Expr, e2: &Expr) -> Vec<i32> {
+        let mut vals = Vec::<i32>::new();
+
+        vals.append(&mut Self::get_vals(e1));
+        vals.append(&mut Self::get_vals(e2));
+        vals.sort();
+
+        vals
+    }
+
+    fn eq_vals(l1: &Expr, l2: &Expr, r1: &Expr, r2: &Expr) -> bool {
+        let lvals = Self::get_all_vals(l1, l2);
+        let rvals = Self::get_all_vals(r1, r2);
+
+        lvals.len() >= 3 && lvals == rvals
     }
 }
 
@@ -84,15 +119,26 @@ impl Display for Expr {
     }
 }
 
+// Expr equality for duplicate removal
 impl PartialEq for Expr {
     fn eq(&self, other: &Self) -> bool {
         match (self, other) {
-            (Self::Val(l0), Self::Val(r0)) => l0 == r0,
-            (Self::Expr(l0, l1, l2), Self::Expr(r0, r1, r2)) => {
-                if l0 == &Op::Add || l0 == &Op::Mul {
-                    l0 == r0 && ((l1 == r1 && l2 == r2) || (l1 == r2 && l2 == r1))
+            (Self::Val(l), Self::Val(r)) => l == r,
+            (Self::Expr(lo, l1, l2), Self::Expr(ro, r1, r2)) => {
+                if lo == &Op::Add || lo == &Op::Mul {
+                    if lo == ro && ((l1 == r1 && l2 == r2) || (l1 == r2 && l2 == r1)) {
+                        true
+                    } else {
+                        if lo == ro {
+                            if Expr::eq_vals(l1, l2, r1, r2) {
+                                return true;
+                            }
+                        }
+
+                        false
+                    }
                 } else {
-                    l0 == r0 && l1 == r1 && l2 == r2
+                    lo == ro && l1 == r1 && l2 == r2
                 }
             }
             _ => false,
@@ -260,6 +306,51 @@ mod tests {
         );
 
         assert_eq!(e1, e2);
+        assert_eq!(eval(&e1), eval(&e2));
+
+        println!("{} == {} ?", e1, e2);
+
+        assert!(!std::ptr::eq(&e1, &e2));
+    }
+
+    #[test]
+    fn expr_eq_add_3vals() {
+        // NOTE: Must be a 'valid' expressions (optimisation)
+        let e1 = Expr::new_expr(
+            Op::Add,
+            Expr::new_val(2),
+            Expr::new_expr(Op::Add, Expr::new_val(3), Expr::new_val(5)),
+        );
+        let e2 = Expr::new_expr(
+            Op::Add,
+            Expr::new_expr(Op::Add, Expr::new_val(2), Expr::new_val(3)),
+            Expr::new_val(5),
+        );
+
+        assert_eq!(e1, e2);
+        assert_eq!(eval(&e1), eval(&e2));
+
+        println!("{} == {} ?", e1, e2);
+
+        assert!(!std::ptr::eq(&e1, &e2));
+    }
+
+    #[test]
+    fn expr_eq_mul_4vals() {
+        // NOTE: Must be a 'valid' expressions (optimisation)
+        let e1 = Expr::new_expr(
+            Op::Mul,
+            Expr::new_expr(Op::Mul, Expr::new_val(3), Expr::new_val(10)),
+            Expr::new_expr(Op::Mul, Expr::new_val(2), Expr::new_val(15)),
+        );
+        let e2 = Expr::new_expr(
+            Op::Mul,
+            Expr::new_expr(Op::Mul, Expr::new_val(2), Expr::new_val(15)),
+            Expr::new_expr(Op::Mul, Expr::new_val(3), Expr::new_val(10)),
+        );
+
+        assert_eq!(e1, e2);
+        assert_eq!(eval(&e1), eval(&e2));
 
         println!("{} == {} ?", e1, e2);
 
