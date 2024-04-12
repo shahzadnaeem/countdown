@@ -132,7 +132,8 @@ impl PartialEq for Expr {
                     if lo == ro && ((l1 == r1 && l2 == r2) || (l1 == r2 && l2 == r1)) {
                         true
                     } else {
-                        if lo == ro {
+                        if lo == ro && lo == &Op::Add {
+                            // Expression of purely Op::Add is duplicate if all operands match
                             if Expr::eq_vals(l1, l2, r1, r2, lo) {
                                 return true;
                             }

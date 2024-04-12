@@ -1,7 +1,7 @@
 use anyhow::Result;
 use clap::Parser;
 use countdown::expr::{all_ops, std_ops, Op, OpsType};
-use countdown::solver_v2::{solutions2, Result as SolutionResult};
+use countdown::solver_v2::{dedup, solutions2};
 
 const ABOUT: &str = r#"Countdown numbers solver
 
@@ -47,20 +47,12 @@ pub fn solve(target: i32, nums: &[i32], ops: &OpsType) {
         solns.1
     );
 
-    let mut deduped = Vec::<SolutionResult>::new();
-    let mut first_dup = true;
+    let (deduped, dups_log) = dedup(&solns.0);
 
-    solns.0.clone().into_iter().for_each(|s| {
-        if let Some(dup) = deduped.iter().find(|&dr| dr == &s) {
-            if first_dup {
-                println!();
-                first_dup = false;
-            }
-            println!("Duplicate: {} of {}", s.0, dup.0);
-        } else {
-            deduped.push(s);
-        }
-    });
+    if !dups_log.is_empty() {
+        println!("\nDuplicates: {} found", dups_log.len());
+        dups_log.iter().for_each(|s| println!("  {s}"));
+    }
 
     if deduped.len() != solns.0.len() {
         println!();

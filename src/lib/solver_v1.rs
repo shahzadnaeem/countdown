@@ -4,7 +4,7 @@ use crate::expr::{eval, Expr, Op};
 // Simplest solution - brute force search
 // NOTE: Includes optimised validity check
 
-pub fn combine(l: Expr, r: Expr) -> Vec<Expr> {
+fn combine(l: Expr, r: Expr) -> Vec<Expr> {
     let mut res = Vec::<Expr>::new();
 
     [Op::Add, Op::Sub, Op::Mul, Op::Div]
@@ -16,7 +16,7 @@ pub fn combine(l: Expr, r: Expr) -> Vec<Expr> {
     res
 }
 
-pub fn exprs(src: &[i32]) -> Vec<Expr> {
+fn exprs(src: &[i32]) -> Vec<Expr> {
     let mut res = Vec::<Expr>::new();
 
     if src.len() == 1 {
@@ -71,7 +71,6 @@ mod tests {
         exp.push(Expr::new_expr(Op::Sub, Expr::new_val(0), Expr::new_val(1)));
         exp.push(Expr::new_expr(Op::Mul, Expr::new_val(0), Expr::new_val(1)));
         exp.push(Expr::new_expr(Op::Div, Expr::new_val(0), Expr::new_val(1)));
-        //exp.push(Expr::new_expr(Op::Exp, Expr::new_val(0), Expr::new_val(1)));
 
         assert_eq!(res, exp);
     }

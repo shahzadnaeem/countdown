@@ -5,7 +5,7 @@ use crate::expr::{eval, valid, Expr, OpsType};
 
 pub type Result = (Expr, i32);
 
-pub fn combine2(l: Result, r: Result, ops: &OpsType) -> Vec<Result> {
+fn combine2(l: Result, r: Result, ops: &OpsType) -> Vec<Result> {
     let mut res = Vec::<Result>::new();
 
     ops.iter().for_each(|op| {
@@ -20,7 +20,7 @@ pub fn combine2(l: Result, r: Result, ops: &OpsType) -> Vec<Result> {
     res
 }
 
-pub fn results(src: &[i32], ops: &OpsType) -> Vec<Result> {
+fn results(src: &[i32], ops: &OpsType) -> Vec<Result> {
     let mut res = Vec::<Result>::new();
 
     if src.len() == 1 {
@@ -61,11 +61,25 @@ pub fn solutions2(input: &[i32], target: i32, ops: &OpsType) -> (Vec<Result>, us
     (res, total_checked)
 }
 
+pub fn dedup(all_solns: &Vec<Result>) -> (Vec<Result>, Vec<String>) {
+    let mut deduped = Vec::<Result>::new();
+    let mut dups_log = Vec::<String>::new();
+
+    all_solns.clone().into_iter().for_each(|s| {
+        if let Some(dup) = deduped.iter().find(|&dr| dr == &s) {
+            dups_log.push(format!("{} == {}", s.0, dup.0));
+        } else {
+            deduped.push(s);
+        }
+    });
+
+    (deduped, dups_log)
+}
+
 #[cfg(test)]
 mod tests {
-
     use super::*;
-    use crate::expr::std_ops;
+    use crate::expr::{std_ops, Op};
 
     #[test]
     fn want_608_v2() {
@@ -86,5 +100,44 @@ mod tests {
         solns.0.iter().for_each(|s| {
             println!("ex: {} = {}", s.0, s.1);
         });
+    }
+
+    #[test]
+    fn add_dups() {
+        let input = [1, 2, 5];
+        let ops = [Op::Add, Op::Mul].to_vec();
+
+        let mut total: usize = 0;
+        let mut res = Vec::<Result>::new();
+
+        choices(&input).into_iter().for_each(|choice| {
+            let results = results(&choice, &ops);
+
+            results.into_iter().for_each(|result| {
+                total += 1;
+
+                res.push(result);
+            });
+        });
+
+        let expected_res = 13;
+        assert_eq!(res.len(), expected_res);
+
+        // println!("Potential results: {total}");
+
+        let (deduped, dups_log) = dedup(&res);
+        let expected_dups = 2;
+
+        assert_eq!(dups_log.len(), expected_dups);
+        assert_eq!(deduped.len(), expected_res - expected_dups);
+
+        // if !dups_log.is_empty() {
+        //     println!("Duplicates: {} found", dups_log.len());
+
+        //     dups_log.iter().for_each(|s| println!("  {s}"));
+        // }
+
+        // println!("Potential results: {}", deduped.len());
+        // deduped.iter().for_each(|s| println!("  {} = {}", s.0, s.1));
     }
 }
