@@ -1,7 +1,7 @@
 use anyhow::Result;
 use clap::Parser;
-use countdown::combs::{solutions2, Result as SolutionResult};
-use countdown::defs::{all_ops, std_ops, Op, OpsType};
+use countdown::expr::{all_ops, std_ops, Op, OpsType};
+use countdown::solver_v2::{solutions2, Result as SolutionResult};
 
 #[derive(Parser)]
 #[command(version = "1.0", about = "Countdown numbers solver")]

@@ -1,5 +1,11 @@
-#[path = "lib/defs.rs"]
-pub mod defs;
+#[path = "lib/expr.rs"]
+pub mod expr;
 
-#[path = "lib/combs.rs"]
-pub mod combs;
+#[path = "lib/combinatorics.rs"]
+pub mod combinatorics;
+
+#[path = "lib/solver_v2.rs"]
+pub mod solver_v2;
+
+#[path = "lib/solver_v1.rs"]
+pub mod solver_v1;

@@ -10,6 +10,9 @@ name = "countdown"
 test = false
 bench = false
 
+[lib]
+doctest = false
+
 [dependencies]
 anyhow = "1.0.81"
 clap = { version = "4.5.3", features = ["derive"] }
