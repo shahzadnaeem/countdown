@@ -3,8 +3,16 @@ use clap::Parser;
 use countdown::expr::{all_ops, std_ops, Op, OpsType};
 use countdown::solver_v2::{solutions2, Result as SolutionResult};
 
+const ABOUT: &str = r#"Countdown numbers solver
+
+Examples:
+  countdown 25 50 75 100 3 6 -t 952          # A famous real game
+  countdown 1 2 3 4 --op add --op mul -t 32  # Can use fewer numbers and operators
+  countdown 1 2 3 4 --all-ops -t 32          # Can use extra operators
+"#;
+
 #[derive(Parser)]
-#[command(version = "1.0", about = "Countdown numbers solver")]
+#[command(version = "1.0", about = ABOUT)]
 struct Countdown {
     #[arg(short = 't', long = "target", help = "Target value")]
     target: i32,
@@ -15,7 +23,7 @@ struct Countdown {
     ops: Vec<Op>,
     #[arg(long, default_value_t = true, help = "[add, mul, sub, div] -- default")]
     std_ops: bool,
-    #[arg(long, default_value_t = false, help = "[add, mul, sub, div, exp]")]
+    #[arg(long, default_value_t = false, help = "[add, mul, sub, div, exp, mod]")]
     all_ops: bool,
 }
 
