@@ -166,8 +166,8 @@ const APPLY_FREELY: bool = true;
 const APPLY_OPTIMISED: bool = false;
 
 pub fn apply(op: &Op, a: &Expr, b: &Expr, freely: bool) -> Option<i32> {
-    if let Some(a) = eval(a) {
-        if let Some(b) = eval(b) {
+    if let Some(a) = sub_eval(a, freely) {
+        if let Some(b) = sub_eval(b, freely) {
             if freely || valid(&op, a, b) {
                 return match op {
                     Op::Add => Some(a + b),
@@ -182,6 +182,14 @@ pub fn apply(op: &Op, a: &Expr, b: &Expr, freely: bool) -> Option<i32> {
     }
 
     None
+}
+
+pub fn sub_eval(expr: &Expr, freely: bool) -> Option<i32> {
+    if freely {
+        eval_freely(expr)
+    } else {
+        eval(expr)
+    }
 }
 
 pub fn eval(expr: &Expr) -> Option<i32> {
