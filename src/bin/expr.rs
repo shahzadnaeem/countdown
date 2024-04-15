@@ -90,7 +90,7 @@ fn main() -> io::Result<()> {
 
 #[cfg(test)]
 pub mod test {
-    use crate::Rule::{self, *};
+    use crate::Rule;
     use countdown::expr::eval_freely;
     use pest::Parser;
 
