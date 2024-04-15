@@ -10,6 +10,11 @@ name = "countdown"
 test = false
 bench = false
 
+[[bin]]
+name = "expr"
+test = false
+bench = false
+
 [lib]
 doctest = false
 
@@ -17,4 +22,7 @@ doctest = false
 anyhow = "1.0.81"
 clap = { version = "4.5.3", features = ["derive"] }
 itertools = "0.12.1"
+lazy_static = "1.4.0"
+pest = "2.7.9"
+pest_derive = "2.7.9"
 thiserror = "1.0.58"

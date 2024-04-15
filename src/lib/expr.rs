@@ -162,10 +162,13 @@ pub fn valid(op: &Op, a: i32, b: i32) -> bool {
     };
 }
 
-pub fn apply(op: &Op, a: &Expr, b: &Expr) -> Option<i32> {
+const APPLY_FREELY: bool = true;
+const APPLY_OPTIMISED: bool = false;
+
+pub fn apply(op: &Op, a: &Expr, b: &Expr, freely: bool) -> Option<i32> {
     if let Some(a) = eval(a) {
         if let Some(b) = eval(b) {
-            if valid(&op, a, b) {
+            if freely || valid(&op, a, b) {
                 return match op {
                     Op::Add => Some(a + b),
                     Op::Sub => Some(a - b),
@@ -184,7 +187,14 @@ pub fn apply(op: &Op, a: &Expr, b: &Expr) -> Option<i32> {
 pub fn eval(expr: &Expr) -> Option<i32> {
     match expr {
         Expr::Val(v) => Some(*v),
-        Expr::Expr(op, a, b) => apply(op, a, b),
+        Expr::Expr(op, a, b) => apply(op, a, b, APPLY_OPTIMISED),
+    }
+}
+
+pub fn eval_freely(expr: &Expr) -> Option<i32> {
+    match expr {
+        Expr::Val(v) => Some(*v),
+        Expr::Expr(op, a, b) => apply(op, a, b, APPLY_FREELY),
     }
 }
 
